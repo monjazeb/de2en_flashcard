@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block container %}
+<h1>German Flashcards</h1>
+<div class="flashcard" id="flashcard" onclick="showDetails()">
+  {{ german_word }}
+</div>
+<div class="details" id="details">
+  <strong>Translation:</strong> {{ translation }}<br />
+  <strong>Definition:</strong> {{ definition }}
+</div>
+<div class="nav-buttons">
+  <form action="{{ prev_url }}" method="get" style="margin: 0">
+    <button type="submit" class="nv-left">&#8592;</button>
+  </form>
+  <input type="text" style="border-radius: 0;"/>
+  <form action="{{ next_url }}" method="get" style="margin: 0">
+    <button type="submit" class="nv-right">&#8594;</button>
+  </form>
+</div>
+<div class="practice-link">
+  <a href="{{ url_for('index') }}">&#8592; Back to Index</a>
+</div>
+{% endblock container %}
