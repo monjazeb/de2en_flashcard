@@ -1,7 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 import requests
 import sqlite3
-import os
+import os, json
+from datetime import datetime, timedelta
 
 BASEURL = 'https://api.pons.com/v1/dictionary'
 
@@ -21,14 +22,35 @@ def init_db():
                 german TEXT NOT NULL,
                 english TEXT,
                 persian TEXT,
-                definition TEXT
+                definition TEXT,
+                pons TEXT,
+                coef INTEGER,
+                after TEXT
             )
         ''')
         conn.commit()
 
-# Google Translate API (unofficial, for demo purposes)
-def translate(text):
-          #https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=de&tl=fa&q=wort
+def translate(text, lng):
+    url = 'https://clients5.google.com/translate_a/t'
+    params = {
+        'client': 'dict-chrome-ex',
+        'sl': 'de',
+        'tl': lng,
+        'q': text
+        }
+    hdr = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+        }
+    response = requests.get(url, headers=hdr, params=params, proxies=PROXIES)
+    if response.ok:
+        try:
+            return response.json()[0]
+        except Exception:
+            return ""
+    return ""
+
+def translate_PONS(text):
     url = BASEURL
     params = {
         "l": "deen",
@@ -41,7 +63,7 @@ def translate(text):
     response = requests.get(url, headers=hdr, params=params, proxies=PROXIES)
     if response.ok:
         try:
-            return response.json()
+            return response.text
         except Exception:
             return ""
     return ""
@@ -49,7 +71,11 @@ def translate(text):
 # Get definition from Google Dictionary API (unofficial, for demo purposes)
 def get_definition(word):
     url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
-    response = requests.get(url)
+    hdr = {
+           'Content-Type': 'application/json',
+           'Accept': 'application/json'
+           }
+    response = requests.get(url, proxies=PROXIES)
     if response.ok:
         try:
             data = response.json()
@@ -61,14 +87,17 @@ def get_definition(word):
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        german = request.form["german"].strip()
-        english = translate(german, "en")
-        persian = translate(german, "fa")
+        german = request.form["german"].strip().capitalize()
+        english = translate(german, "en").capitalize()
+        persian = translate(german, "fa").capitalize()
         definition = get_definition(english)
+        pons = translate_PONS(german)
+        if persian == english:
+            return redirect(url_for("index"))        
         with sqlite3.connect(DB_PATH) as conn:
             c = conn.cursor()
-            c.execute("INSERT INTO flashcards (german, english, persian, definition) VALUES (?, ?, ?, ?)",
-                      (german, english, persian, definition))
+            c.execute("INSERT INTO flashcards (german, english, persian, definition, pons, coef, after) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                      (german, english, persian, definition, pons, 1, str(datetime.today())))
             conn.commit()
         return redirect(url_for("index"))
     with sqlite3.connect(DB_PATH) as conn:
@@ -81,25 +110,53 @@ def index():
 def practice():
     with sqlite3.connect(DB_PATH) as conn:
         c = conn.cursor()
-        c.execute("SELECT * FROM flashcards ORDER BY RANDOM() LIMIT 1")
+        #WHERE after>='{str(datetime.today())}'
+        c.execute(f"SELECT * FROM flashcards ORDER BY RANDOM() LIMIT 1")
         card = c.fetchone()
-    return render_template("practice.html", card=card)
+        if card is None:
+            c.execute(f"SELECT * FROM flashcards WHERE id=0")
+            card = c.fetchone()
+    return render_template("practice.html",
+                           card={
+                               'id':card[0],
+                               'de':card[1],
+                               'en':card[2],
+                               'fa':card[3],
+                               'tx':card[4]},
+                           pons=json.loads(card[5]))
 
-@app.route("/reveal/<int:card_id>")
-def reveal(card_id):
+@app.route("/knew/<int:card_id>")
+def knew(card_id):
     with sqlite3.connect(DB_PATH) as conn:
         c = conn.cursor()
-        c.execute("SELECT * FROM flashcards WHERE id=?", (card_id,))
-        card = c.fetchone()
-    return jsonify({
-        "english": card[2],
-        "persian": card[3],
-        "definition": card[4]
-    })
+        c.execute(f"SELECT coef FROM flashcards WHERE id={card_id}")
+        coef = c.fetchone()[0]
+        after = str(datetime.today()+timedelta(days=coef))
+        coef=(2*coef)%17
+        c.execute(f"UPDATE flashcards SET coef={coef}, after='{after}' WHERE id={card_id}")
+    return redirect(url_for('practice'))
+    
+@app.route("/forgot/<int:card_id>")
+def forgot(card_id):
+    with sqlite3.connect(DB_PATH) as conn:
+        c = conn.cursor()
+        after = str(datetime.today())
+        c.execute(f"UPDATE flashcards SET coef=1, after='{after}' WHERE id={card_id}")
+    return redirect(url_for('practice'))
+
 
 if __name__ == "__main__":
     if not os.path.exists(DB_PATH):
         init_db()
+    app.run(debug=True)
+
+
+
+
+
+
+
+'''
     for a in translate('fast'):
         print(a['lang'])
         for b in a['hits']:
@@ -115,10 +172,9 @@ if __name__ == "__main__":
                         print(e['target'])
                     continue
     #['hits'][0]['roms'][0]['arabs']:
+''' 
     
     
     
     
     
-    
-#    app.run(debug=True)
