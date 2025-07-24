@@ -3,8 +3,6 @@ import requests
 import sqlite3
 import os
 
-APIKEY = 'AIzaSyCBv1iqQ41ufsP7bbnxKbIYFCOqrMiEsfM'
-SECRET = '1e049a9c1e4d2dddf763e62c18d44081ecea61041b5d1e8529604c1a3076be37'
 BASEURL = 'https://api.pons.com/v1/dictionary'
 
 PROXIES = {'http': 'http://sophosutm.mevis.lokal:8080',
