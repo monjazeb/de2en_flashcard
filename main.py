@@ -1,16 +1,21 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 import requests
 import sqlite3
-import os, json
+import os
+import json
+import dotenv
 from datetime import datetime, timedelta
 
-BASEURL = 'https://api.pons.com/v1/dictionary'
+dotenv.load_dotenv()
+BASEURL = os.getenv("BASEURL")
+DB_PATH = os.getenv("DB_PATH")
+SECRET = os.getenv("SECRET")
+APIKEY = os.getenv("APIKEY")
 
 PROXIES = {'http': 'http://sophosutm.mevis.lokal:8080',
            'https': 'http://sophosutm.mevis.lokal:8080'}
-app = Flask(__name__)
 
-DB_PATH = "flashcards.db"
+app = Flask(__name__)
 
 # Initialize database
 def init_db():
@@ -125,6 +130,23 @@ def practice():
                                'tx':card[4]},
                            pons=json.loads(card[5]))
 
+@app.route("/view/<int:card_id>")
+def view(card_id):
+    with sqlite3.connect(DB_PATH) as conn:
+        c = conn.cursor()
+        c.execute(f"SELECT * FROM flashcards WHERE id='{card_id}'")
+        card = c.fetchone()
+        if card is None:
+            card = EMPTY_CARD
+    return render_template("view.html",
+                           card={
+                               'id':card[0],
+                               'de':card[1],
+                               'en':card[2],
+                               'fa':card[3],
+                               'tx':card[4]},
+                           pons=json.loads(card[5]))
+
 @app.route("/knew/<int:card_id>")
 def knew(card_id):
     with sqlite3.connect(DB_PATH) as conn:
@@ -144,6 +166,9 @@ def forgot(card_id):
         c.execute(f"UPDATE flashcards SET coef=1, after='{after}' WHERE id={card_id}")
     return redirect(url_for('practice'))
 
+@app.route('/pomo')
+def pomo():
+    return render_template("pomodoro.html")
 
 if __name__ == "__main__":
     if not os.path.exists(DB_PATH):

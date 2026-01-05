@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block container %}
+  <div class="container pomodoro">
+    <div class="status" id="status">Focus Time</div>
+    <div class="timer" id="timer">25:00</div>
+    <div class="controls">
+      <button id="startBtn" class="nv-left">Start</button><button id="pauseBtn">Pause</button><button id="resetBtn" class="nv-right">Reset</button>
+    </div>
+    <div class="status"><span id="cycles"></span> Cycles done.</div>
+  </div>
+{% endblock container %}

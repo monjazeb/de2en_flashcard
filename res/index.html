@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block container %}
+<h1>German Flashcards</h1>
+<form method="POST">
+  <input
+    type="text"
+    name="german"
+    placeholder="Enter German word..."
+    required
+  />
+  <button type="submit">Add</button>
+</form>
+<div class="practice-link">
+  <a href="{{ url_for('practice') }}">Practice Flashcards &rarr;</a>
+</div>
+<table>
+  <thead>
+    <tr>
+      <th>German</th>
+      <th>English</th>
+      <th>Persian</th>
+      <th>Definition</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for card in flashcards %}
+    <tr>
+      <td>{{ card[1] }}</td>
+      <td>{{ card[2] }}</td>
+      <td>{{ card[3] }}</td>
+      <td>{{ card[4] }}</td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="4" style="text-align: center; color: #888">
+        Not yet Started.
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock container %}
