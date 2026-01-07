@@ -1,9 +1,15 @@
 const timerDisplay = document.getElementById("timer");
 
-const WORK_MINUTES = 0.2;
-const BREAK_MINUTES = 0.1;
-const workDuration = WORK_MINUTES*60;
-const breakDuration = BREAK_MINUTES*60;
+if (!localStorage.getItem("focusTime")){
+  localStorage.setItem("focusTime", 25);
+}
+if (!localStorage.getItem("breakTime")){
+  localStorage.setItem("breakTime", 5);
+}
+const workDuration = localStorage.getItem("focusTime")*60;
+const breakDuration = localStorage.getItem("breakTime")*60;
+
+const audio = document.querySelector("audio");
 
 let isWorkTime = true;
 let timeLeft = workDuration;
@@ -52,6 +58,7 @@ function toggleStatus(){
   timeLeft = isWorkTime ? workDuration : breakDuration;
   document.getElementById('status').textContent = isWorkTime ? "Focus Time":"Break Time";
   document.getElementById('timer').style.color = isWorkTime ? "":"green";
+  audio.play();
   if(isWorkTime) {
     cycles +=1;
     updateCyclesDisplay();
@@ -65,8 +72,18 @@ document.getElementById("resetBtn").addEventListener('click', () =>{
   resetTimer();
 });
 document.getElementById("pauseBtn").addEventListener('click', () =>{
-  pauseTimer();
+  stopTimer();
 });
 
 updateTimerDisplay();
 updateCyclesDisplay();
+
+function confirm_delete(card_id){
+  let c = confirm("Are you sure you want to delete this flashcard?");
+  if (c){ 
+    window.location.href = `/delete/${card_id}`;
+  }
+}
+document.getElementById("home").addEventListener('click', () =>{
+  window.location.href = '/';
+});

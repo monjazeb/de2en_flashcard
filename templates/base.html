@@ -3,15 +3,48 @@
   <head>
     <meta charset="UTF-8" />
     <title>German Flashcards</title>
-    <link
-      href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Vazirmatn">
-    <link rel="stylesheet" href="static/style.css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Vazirmatn"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
   </head>
   <body>
-    <div class="container">{% block container %} {% endblock container %}</div>
-    <script src="static/script.js"></script>
+    <div class="container">
+      <div class="top-bar">
+        <button id="theme-toggle" class="theme">🌙</button>
+        <button id="home" class="theme">🏠</button>
+      </div>
+      {% block container %} {% endblock container %}
+    </div>
+    <div class="side">
+      <audio src="{{ url_for('static', filename='ding.mp3') }}"></audio>
+      <div class="container pomodoro">
+        <div class="status" id="status">Focus Time</div>
+        <div class="timer" id="timer">25:00</div>
+        <div class="controls">
+          <button id="startBtn" class="nv-left">&#x25b6;</button><button id="pauseBtn">&#x23f8;</button><button id="resetBtn" class="nv-right">&#x23ee;</button>
+        </div>
+        <div class="status"><span id="cycles"></span> Cycles done.</div>
+      </div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+      const themeToggle = document.getElementById("theme-toggle");
+
+      // Load saved theme
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "dark") {
+        document.body.classList.add("dark-theme");
+        themeToggle.textContent = "☀️";
+      } else {
+        themeToggle.textContent = "🌙";
+      }
+
+      themeToggle.addEventListener("click", () => {
+        document.body.classList.toggle("dark-theme");
+        const isDark = document.body.classList.contains("dark-theme");
+        themeToggle.textContent = isDark ? "☀️" : "🌙";
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+      });
+    </script>
   </body>
 </html>

@@ -1,5 +1,4 @@
-{% extends 'base.html' %}
-{% block container %}
+{% extends 'base.html' %} {% block container %}
 <h1>German Flashcards</h1>
 <form method="POST">
   <input
@@ -25,10 +24,13 @@
   <tbody>
     {% for card in flashcards %}
     <tr>
-      <td><a href="{{ url_for('view', card_id=card[0]) }}">{{ card[1] }}</a></td>
+      <td>
+        <a href="{{ url_for('view', card_id=card[0]) }}">{{ card[1] }}</a>
+      </td>
       <td>{{ card[2] }}</td>
       <td>{{ card[3] }}</td>
       <td>{{ card[4] }}</td>
+      <td class="close" onclick="confirm_delete({{ card[0] }})">&#10060;</td>
     </tr>
     {% else %}
     <tr>

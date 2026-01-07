@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block container %}
+<h1>Set Pomodoro Timer</h1>
+<h2>Focus time: {{ t1 }} min.</h2>
+<h2>Break time:{{ t2 }} min.</h2>
+<button onclick="setTimer({{ t1 }}, {{ t2 }})">Set timer</button>
+<script>
+  function setTimer(t1, t2) {
+    localStorage.setItem("focusTime", t1);
+    localStorage.setItem("breakTime", t2);
+    window.location.href='/';
+  }
+</script>
+{% endblock container %}
